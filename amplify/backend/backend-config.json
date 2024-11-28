@@ -1,0 +1,43 @@
+{
+  "api": {
+    "supabase": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "amplifywebsite0ff0fad4"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    }
+  },
+  "function": {
+    "amplifywebsite0ff0fad4": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_amplifywebsite0ff0fad4_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "amplifywebsite0ff0fad4"
+        }
+      ]
+    },
+    "AMPLIFY_function_amplifywebsite0ff0fad4_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "amplifywebsite0ff0fad4"
+        }
+      ]
+    }
+  }
+}
