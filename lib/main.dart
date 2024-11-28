@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://jvynboxollnhsfbacebb.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2eW5ib3hvbGxuaHNmYmFjZWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4MTEyMzgsImV4cCI6MjA0ODM4NzIzOH0.2oQRgcHdnqsLTxKY-ASzG243WFCXNpG_qrmh3lp6je0',
+  );
   runApp(const MyApp());
 }
 
@@ -10,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Amplify Hosting - ToDo List',
+      title: 'Supabase ToDo List',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,
@@ -31,21 +37,38 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controller = TextEditingController();
-  final List<String> _tasks = [];
+  final supabase = Supabase.instance.client;
+  List<dynamic> _tasks = [];
 
-  void _addTask() {
+  @override
+  void initState() {
+    super.initState();
+    _fetchTasks();
+  }
+
+  Future<void> _fetchTasks() async {
+    final response = await supabase.from('todos').select();
+    setState(() {
+      _tasks = response as List<dynamic>;
+    });
+  }
+
+  Future<void> _addTask() async {
     if (_controller.text.isNotEmpty) {
-      setState(() {
-        _tasks.add(_controller.text);
-        _controller.clear();
-      });
+      await supabase.from('todos').insert({'title': _controller.text, 'is_complete': false});
+      _controller.clear();
+      _fetchTasks();
     }
   }
 
-  void _removeTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
+  Future<void> _removeTask(int id) async {
+    await supabase.from('todos').delete().eq('id', id);
+    _fetchTasks();
+  }
+
+  Future<void> _toggleTaskCompletion(int id, bool isComplete) async {
+    await supabase.from('todos').update({'is_complete': !isComplete}).eq('id', id);
+    _fetchTasks();
   }
 
   @override
@@ -76,12 +99,14 @@ class _MyHomePageState extends State<MyHomePage> {
               child: ListView.builder(
                 itemCount: _tasks.length,
                 itemBuilder: (context, index) {
+                  final task = _tasks[index];
                   return ListTile(
-                    title: Text(_tasks[index]),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => _removeTask(index),
+                    title: Text(task['title']),
+                    trailing: Checkbox(
+                      value: task['is_complete'],
+                      onChanged: (value) => _toggleTaskCompletion(task['id'], task['is_complete']),
                     ),
+                    onLongPress: () => _removeTask(task['id']),
                   );
                 },
               ),
